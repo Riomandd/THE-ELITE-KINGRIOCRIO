@@ -1,0 +1,844 @@
+
+<!DOCTYPE html><html lang="en"><head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI SERVER</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary-color: #00ffea;
+      --primary-transparent: #00ffea33;
+      --primary-hover: #00ffea4d;
+      --background: #000;
+      --card-bg: #111;
+      --table-border: #222;
+      --analysis-box-bg: #222;
+      --text-gray: #aaa;
+    }
+    body {
+      font-family: 'Outfit', sans-serif;
+      background: var(--background);
+      color: #fff;
+      margin: 0;
+      padding: 10px;
+      text-align: center;
+      animation: slide-up-down 2s ease-in-out infinite;
+    }
+    .header {
+      font-size: 20px;
+      font-weight: bold;
+      color: var(--primary-color);
+      margin-bottom: 10px;
+    }
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--primary-color);
+      border-radius: 10px;
+      padding: 10px;
+      margin-bottom: 12px;
+    }
+    .prediction-btn {
+      margin: 10px auto;
+      display: block;
+      background: var(--primary-transparent);
+      color: var(--primary-color);
+      border: 1px solid var(--primary-color);
+      border-radius: 8px;
+      padding: 12px;
+      font-weight: bold;
+      font-size: 18px;
+      transition: transform 0.2s;
+    }
+    .prediction-btn:hover {
+      transform: scale(1.05);
+    }
+    #patternBox {
+      color: var(--text-gray);
+      font-size: 14px;
+      margin-top: 5px;
+    }
+    .tab-buttons {
+      display: flex;
+      border: 1px solid var(--primary-color);
+      border-radius: 8px;
+      overflow: hidden;
+      margin-bottom: 10px;
+    }
+    .tab-buttons button {
+      flex: 1;
+      background: var(--card-bg);
+      color: var(--primary-color);
+      padding: 8px;
+      border: none;
+      cursor: pointer;
+      font-weight: bold;
+      transition: background 0.3s, transform 0.2s;
+    }
+    .tab-buttons button.active {
+      background: var(--primary-transparent);
+      transform: translateY(-2px);
+    }
+    .tab-buttons button:hover {
+      background: var(--primary-hover);
+      transform: translateY(-2px);
+    }
+    .history-container {
+      border: 1px solid var(--primary-color);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    th, td {
+      font-size: 13px;
+      border-bottom: 1px solid var(--table-border);
+      padding: 6px;
+    }
+    th {
+      background: var(--card-bg);
+      color: var(--primary-color);
+    }
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+    .dot.red { background: red; }
+    .dot.green { background: lime; }
+    .dot.violet { background: violet; }
+    .num.red { color: red; font-weight: bold; }
+    .num.green { color: lime; font-weight: bold; }
+    .num.violet { color: violet; font-weight: bold; }
+    .status {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      font-weight: bold;
+      font-size: 12px;
+    }
+    .status.win { background: lime; color: #000; }
+    .status.loss { background: red; color: #fff; }
+    .status.pending { background: var(--text-gray); color: #000; }
+    .analysis-dashboard {
+      background: var(--card-bg);
+      border: 1px solid var(--primary-color);
+      border-radius: 10px;
+      padding: 10px;
+      margin-bottom: 12px;
+    }
+    .analysis-header {
+      font-size: 16px;
+      font-weight: bold;
+      color: var(--primary-color);
+      margin-bottom: 8px;
+    }
+    .analysis-content {
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+    }
+    .analysis-box {
+      flex: 1;
+      min-width: 100px;
+      margin: 5px;
+      padding: 8px;
+      background: var(--analysis-box-bg);
+      border: 1px solid var(--primary-color);
+      border-radius: 8px;
+      transition: transform 0.3s;
+    }
+    .analysis-box:hover {
+      transform: translateY(-3px);
+    }
+    .online { color: lime; }
+    .offline { color: red; }
+    .filter-container {
+      background: var(--card-bg);
+      border: 1px solid var(--primary-color);
+      border-radius: 8px;
+      padding: 10px;
+      margin-bottom: 12px;
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+    }
+    .filter-container select {
+      background: var(--analysis-box-bg);
+      color: var(--primary-color);
+      border: 1px solid var(--primary-color);
+      border-radius: 5px;
+      padding: 5px;
+      font-size: 14px;
+    }
+    .filter-container button {
+      background: var(--primary-transparent);
+      color: var(--primary-color);
+      border: 1px solid var(--primary-color);
+      border-radius: 5px;
+      padding: 5px 10px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    .filter-container button:hover {
+      background: var(--primary-hover);
+    }
+
+    @keyframes slide-up-down {
+      0% { transform: translateY(-10px); }
+      50% { transform: translateY(10px); }
+      100% { transform: translateY(-10px); }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">MEDUSA API</div>
+  <div class="card">
+    <div class="analysis-header">CURRENT PREDICTION</div>
+    <div id="currentPeriod">Current Period: Loading...</div>
+    <div id="liveTime">Time: --:--:--</div>
+    <div id="predictionBox" class="prediction-btn">Prediction → Analyzing...</div>
+    <div id="confidenceBox">Confidence: --%</div>
+    <div id="patternBox"></div>
+    <div id="levelBox">Prediction Level: --</div>
+  </div>
+  <div class="analysis-dashboard">
+    <div class="analysis-header">ANALYSIS DASHBOARD</div>
+    <div class="analysis-content">
+      <div class="analysis-box">Total Wins: <span id="totalWins">0</span></div>
+      <div class="analysis-box">Total Losses: <span id="totalLosses">0</span></div>
+      <div class="analysis-box">Accuracy: <span id="accuracy">0%</span></div>
+      <div class="analysis-box">Server Status: <span id="serverStatus" class="offline">Offline</span></div>
+    </div>
+  </div>
+  <div class="filter-container">
+    <select id="filterType">
+      <option value="all">All Results</option>
+      <option value="big">Big Only</option>
+      <option value="small">Small Only</option>
+      <option value="win">Wins Only</option>
+      <option value="loss">Losses Only</option>
+    </select>
+    <button onclick="applyFilter()">Apply Filter</button>
+    <button onclick="resetFilter()">Reset Filter</button>
+  </div>
+  <div class="tab-buttons">
+    <button id="predTab" class="active">Prediction History</button>
+    <button id="gameTab">Game History</button>
+  </div>
+  <div class="history-container">
+    <table>
+      <thead id="tableHead"></thead>
+      <tbody id="tableBody"><tr><td>Loading...</td></tr></tbody>
+    </table>
+  </div>
+
+  <script>
+    // Configuration Constants
+    const config = {
+      apiUrl: 'https://draw.ar-lottery01.com/WinGo/WinGo_30S/GetHistoryIssuePage.json',
+      pollInterval: 5000,
+      itemsPerPage: 10,
+      periodDuration: 30000,
+      maxHistory: 2880,
+      historyExpiryMs: 24 * 60 * 60 * 1000,
+      maxDailyPatterns: 7,
+      maxWinLevel: 3,
+      localStorageKey: 'lsr_predictor_state_v6_enhanced'
+    };
+
+    const SMALL_NUMBERS = [0, 1, 2, 3, 4];
+    const BIG_NUMBERS = [5, 6, 7, 8, 9];
+
+    // State management
+    const state = {
+      currentPage: 1,
+      totalPages: 1,
+      allResults: [],
+      lastUpdated: null,
+      isLoading: false,
+      countdown: 30,
+      countdownInterval: null,
+      predictionHistory: [],
+      dailyPatterns: {},
+      stats: { wins: 0, losses: 0, streak: 0, accuracy: 0 },
+      lastFetchedPeriod: null,
+      lastPrediction: null,
+      winLevel: 0,
+      consecutiveLosses: 0,
+      serverTimeOffset: 0,
+      filter: { type: 'all' }
+    };
+
+    // DOM elements
+    const elements = {
+      currentPeriod: document.getElementById('currentPeriod'),
+      liveTime: document.getElementById('liveTime'),
+      predictionBox: document.getElementById('predictionBox'),
+      confidenceBox: document.getElementById('confidenceBox'),
+      patternBox: document.getElementById('patternBox'),
+      levelBox: document.getElementById('levelBox'),
+      totalWins: document.getElementById('totalWins'),
+      totalLosses: document.getElementById('totalLosses'),
+      accuracy: document.getElementById('accuracy'),
+      serverStatus: document.getElementById('serverStatus'),
+      predTab: document.getElementById('predTab'),
+      gameTab: document.getElementById('gameTab'),
+      tableHead: document.getElementById('tableHead'),
+      tableBody: document.getElementById('tableBody'),
+      filterType: document.getElementById('filterType')
+    };
+
+    // Prediction Classes
+    class SumLogicPredictor {
+      constructor() {
+        this.name = "Sum Logic";
+        this.accuracyStats = { correct: 0, total: 0 };
+      }
+
+      calculateSumLogic(periodNumber) {
+        const periodStr = periodNumber.toString();
+        const last5Digits = periodStr.slice(-5).split('').map(Number);
+        const sum = last5Digits.reduce((total, digit) => total + digit, 0);
+        const divisionResult = sum / 3;
+        const decimalPart = divisionResult.toString().split('.')[1] || '0';
+        const lastDigit = parseInt(decimalPart.slice(-1));
+        return {
+          prediction: lastDigit <= 4 ? "SMALL" : "BIG",
+          confidence: 0.85,
+          reasoning: [
+            `Sum Logic: Period ${periodNumber}`,
+            `Last 5 digits: ${last5Digits.join('')}`,
+            `Sum: ${sum}`,
+            `Division: ${sum} ÷ 3 = ${divisionResult.toFixed(10)}`,
+            `Last digit: ${lastDigit}`,
+            `Prediction: ${lastDigit <= 4 ? "SMALL (0-4)" : "BIG (5-9)"}`
+          ]
+        };
+      }
+
+      generatePrediction(currentPeriod) {
+        return currentPeriod && currentPeriod !== "Unavailable"
+          ? this.calculateSumLogic(currentPeriod)
+          : { prediction: Math.random() > 0.5 ? "BIG" : "SMALL", confidence: 0.5, reasoning: ["Random (no period data)"] };
+      }
+
+      updateAccuracy(actualNumber, prediction) {
+        if (!prediction) return;
+        this.accuracyStats.total++;
+        if (prediction.prediction === (actualNumber <= 4 ? "SMALL" : "BIG")) {
+          this.accuracyStats.correct++;
+        }
+      }
+
+      getAccuracy() {
+        return this.accuracyStats.total === 0 ? 0 : (this.accuracyStats.correct / this.accuracyStats.total) * 100;
+      }
+    }
+
+    class PatternBasedPredictor {
+      constructor() {
+        this.name = "Pattern Based";
+        this.accuracyStats = { correct: 0, total: 0 };
+      }
+
+      generatePrediction(history) {
+        if (history.length < 3) {
+          return { prediction: Math.random() > 0.5 ? "BIG" : "SMALL", confidence: 0.5, reasoning: ["Insufficient history"] };
+        }
+
+        const lastThree = history.slice(0, 3).map(item => item.number >= 5 ? "BIG" : "SMALL");
+        const pattern = lastThree.join('-');
+        const patternCount = history.reduce((acc, item, index) => {
+          if (index < history.length - 3) {
+            const seq = history.slice(index, index + 3).map(i => i.number >= 5 ? "BIG" : "SMALL").join('-');
+            acc[seq] = (acc[seq] || 0) + 1;
+            return acc;
+          }
+          return acc;
+        }, {});
+
+        const prediction = patternCount[pattern] > 2 && lastThree[0] === lastThree[1]
+          ? lastThree[0]
+          : lastThree[0] === "BIG" ? "SMALL" : "BIG";
+        const confidence = patternCount[pattern] ? Math.min(0.9, patternCount[pattern] * 0.1) : 0.6;
+
+        return {
+          prediction,
+          confidence,
+          reasoning: [`Pattern: ${pattern}`, `Occurrences: ${patternCount[pattern] || 0}`, `Prediction: ${prediction}`]
+        };
+      }
+
+      updateAccuracy(actualNumber, prediction) {
+        if (!prediction) return;
+        this.accuracyStats.total++;
+        if (prediction.prediction === (actualNumber <= 4 ? "SMALL" : "BIG")) {
+          this.accuracyStats.correct++;
+        }
+      }
+
+      getAccuracy() {
+        return this.accuracyStats.total === 0 ? 0 : (this.accuracyStats.correct / this.accuracyStats.total) * 100;
+      }
+    }
+
+    class StatisticalPredictor {
+      constructor() {
+        this.name = "Statistical";
+        this.accuracyStats = { correct: 0, total: 0 };
+      }
+
+      generatePrediction(history) {
+        if (history.length < 5) {
+          return { prediction: Math.random() > 0.5 ? "BIG" : "SMALL", confidence: 0.5, reasoning: ["Insufficient history"] };
+        }
+
+        const numbers = history.slice(0, 5).map(item => item.number);
+        const mean = numbers.reduce((sum, num) => sum + num, 0) / numbers.length;
+        const prediction = mean >= 5 ? "BIG" : "SMALL";
+        const confidence = 0.7 + Math.abs(mean - 4.5) * 0.05;
+
+        return {
+          prediction,
+          confidence: Math.min(confidence, 0.9),
+          reasoning: [`Mean of last 5: ${mean.toFixed(2)}`, `Prediction: ${prediction}`]
+        };
+      }
+
+      updateAccuracy(actualNumber, prediction) {
+        if (!prediction) return;
+        this.accuracyStats.total++;
+        if (prediction.prediction === (actualNumber <= 4 ? "SMALL" : "BIG")) {
+          this.accuracyStats.correct++;
+        }
+      }
+
+      getAccuracy() {
+        return this.accuracyStats.total === 0 ? 0 : (this.accuracyStats.correct / this.accuracyStats.total) * 100;
+      }
+    }
+
+    // Re-verification System
+    class PredictionReverifier {
+      constructor(predictors) {
+        this.predictors = predictors;
+        this.weights = {
+          "Sum Logic": 0.4,
+          "Pattern Based": 0.3,
+          "Statistical": 0.3
+        };
+      }
+
+      generateFinalPrediction(period, history) {
+        const predictions = this.predictors.map(predictor => ({
+          name: predictor.name,
+          result: predictor.name === "Sum Logic" ? predictor.generatePrediction(period) : predictor.generatePrediction(history)
+        }));
+
+        let bigScore = 0, smallScore = 0;
+        const reasoning = [];
+        predictions.forEach(pred => {
+          const weight = this.weights[pred.name] || 0.33;
+          if (pred.result.prediction === "BIG") {
+            bigScore += pred.result.confidence * weight;
+          } else {
+            smallScore += pred.result.confidence * weight;
+          }
+          reasoning.push(...pred.result.reasoning);
+        });
+
+        const finalPrediction = bigScore >= smallScore ? "BIG" : "SMALL";
+        const confidence = Math.max(bigScore, smallScore);
+        const level = confidence >= 0.85 ? "Level 2 (Advanced)" : "Level 1 (Basic)";
+
+        return { prediction: finalPrediction, confidence, reasoning, level };
+      }
+
+      updateAccuracy(actualNumber, predictions) {
+        this.predictors.forEach(predictor => predictor.updateAccuracy(actualNumber, predictions[predictor.name]));
+      }
+    }
+
+    // Initialize predictors
+    const predictors = [
+      new SumLogicPredictor(),
+      new PatternBasedPredictor(),
+      new StatisticalPredictor()
+    ];
+    const reverifier = new PredictionReverifier(predictors);
+
+    // LocalStorage persistence
+    function loadStateFromLocalStorage() {
+      const savedState = localStorage.getItem(config.localStorageKey);
+      if (savedState) {
+        const parsedState = JSON.parse(savedState);
+        state.predictionHistory = parsedState.predictionHistory || [];
+        state.dailyPatterns = parsedState.dailyPatterns || {};
+        state.stats = parsedState.stats || { wins: 0, losses: 0, streak: 0, accuracy: 0 };
+        state.winLevel = parsedState.winLevel || 0;
+        state.consecutiveLosses = parsedState.consecutiveLosses || 0;
+        cleanOldHistory();
+        updateStats();
+      }
+    }
+
+    function saveStateToLocalStorage() {
+      const persistableState = {
+        predictionHistory: state.predictionHistory,
+        dailyPatterns: state.dailyPatterns,
+        stats: state.stats,
+        winLevel: state.winLevel,
+        consecutiveLosses: state.consecutiveLosses
+      };
+      localStorage.setItem(config.localStorageKey, JSON.stringify(persistableState));
+    }
+
+    // Update status
+    const updateLastStatus = (actualNumber) => {
+      const resultType = actualNumber >= 5 ? 'BIG' : 'SMALL';
+      const status = state.lastPrediction === resultType ? 'WIN' : 'LOSS';
+
+      if (status === 'WIN') {
+        state.winLevel = Math.min(state.winLevel + 1, config.maxWinLevel);
+        state.stats.streak = state.stats.streak + 1;
+        state.consecutiveLosses = 0;
+        state.stats.wins++;
+      } else {
+        state.winLevel = 0;
+        state.stats.streak = 0;
+        state.consecutiveLosses++;
+        state.stats.losses++;
+      }
+
+      saveStateToLocalStorage();
+      return { status, resultType };
+    };
+
+    // Period number logic
+    function addOneToBigNumber(numStr) {
+      let carry = 1;
+      let result = "";
+      for (let i = numStr.length - 1; i >= 0; i--) {
+        const sum = parseInt(numStr[i]) + carry;
+        if (sum >= 10) {
+          carry = 1;
+          result = "0" + result;
+        } else {
+          carry = 0;
+          result = sum.toString() + result;
+        }
+      }
+      if (carry === 1) result = "1" + result;
+      return result;
+    }
+
+    // Synchronize countdown
+    function syncCountdownWithServer(latestPeriod) {
+      const now = Date.now();
+      const periodStartTime = now - (now % config.periodDuration);
+      state.serverTimeOffset = periodStartTime % config.periodDuration;
+      const elapsedInPeriod = (now - state.serverTimeOffset) % config.periodDuration;
+      state.countdown = Math.floor((config.periodDuration - elapsedInPeriod) / 1000);
+      if (state.countdown <= 0) state.countdown = 30;
+
+      clearInterval(state.countdownInterval);
+      updateTimerDisplay();
+      state.countdownInterval = setInterval(() => {
+        state.countdown--;
+        updateTimerDisplay();
+        if (state.countdown <= 0) {
+          fetchData();
+          state.countdown = 30;
+        }
+      }, 1000);
+    }
+
+    function updateTimerDisplay() {
+      elements.liveTime.innerText = `Time: ${state.countdown}s`;
+    }
+
+    // Store Daily Pattern
+    const storeDailyPattern = (result) => {
+      const dateKey = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+      if (!state.dailyPatterns[dateKey]) state.dailyPatterns[dateKey] = [];
+      state.dailyPatterns[dateKey].push({
+        number: Number(result.number),
+        isBig: Number(result.number) >= 5,
+        timestamp: Date.now()
+      });
+
+      const dates = Object.keys(state.dailyPatterns).sort();
+      if (dates.length > config.maxDailyPatterns) {
+        dates.slice(0, dates.length - config.maxDailyPatterns).forEach(date => {
+          delete state.dailyPatterns[date];
+        });
+      }
+
+      saveStateToLocalStorage();
+    };
+
+    // Clean Old History
+    const cleanOldHistory = () => {
+      const now = Date.now();
+      state.predictionHistory = state.predictionHistory.filter(item => {
+        const timestamp = item.timestamp || now;
+        return (now - timestamp) <= config.historyExpiryMs;
+      });
+
+      if (state.predictionHistory.length > config.maxHistory) {
+        state.predictionHistory = state.predictionHistory.slice(0, config.maxHistory);
+      }
+
+      saveStateToLocalStorage();
+    };
+
+    // Filter System
+    function applyFilter() {
+      state.filter.type = elements.filterType.value;
+      renderTable();
+    }
+
+    function resetFilter() {
+      state.filter.type = 'all';
+      elements.filterType.value = 'all';
+      renderTable();
+    }
+
+    function filterHistory(history) {
+      if (state.filter.type === 'all') return history;
+      return history.filter(item => {
+        if (state.filter.type === 'big') return item.resultType === 'BIG';
+        if (state.filter.type === 'small') return item.resultType === 'SMALL';
+        if (state.filter.type === 'win') return item.resultStatus === 'WIN';
+        if (state.filter.type === 'loss') return item.resultStatus === 'LOSS';
+        return true;
+      });
+    }
+
+    function updateColorScheme() {
+      const hue = Math.floor(Math.random() * 360);
+      const saturation = Math.floor(Math.random() * 30) + 70;
+      const lightness = Math.floor(Math.random() * 20) + 50;
+      const primaryColor = `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+      const primaryTransparent = primaryColor.replace(')', ', 0.2)').replace('hsl', 'hsla');
+      const primaryHover = primaryColor.replace(')', ', 0.3)').replace('hsl', 'hsla');
+      document.documentElement.style.setProperty('--primary-color', primaryColor);
+      document.documentElement.style.setProperty('--primary-transparent', primaryTransparent);
+      document.documentElement.style.setProperty('--primary-hover', primaryHover);
+    }
+
+    function getBigSmall(num) {
+      return num >= 5 ? "BIG" : "SMALL";
+    }
+
+    function getColor(num) {
+      if ([1, 3, 7, 9].includes(num)) return "Green";
+      if ([2, 4, 6, 8].includes(num)) return "Red";
+      return "Violet";
+    }
+
+    function updateStats() {
+      const total = state.stats.wins + state.stats.losses;
+      state.stats.accuracy = total > 0 ? ((state.stats.wins / total) * 100).toFixed(2) : 0;
+      elements.totalWins.innerText = state.stats.wins;
+      elements.totalLosses.innerText = state.stats.losses;
+      elements.accuracy.innerText = `${state.stats.accuracy}%`;
+    }
+
+    async function checkInternetSpeed() {
+      const statusElement = elements.serverStatus;
+      if (!navigator.onLine) {
+        statusElement.innerText = "Offline";
+        statusElement.className = "offline";
+        return;
+      }
+
+      try {
+        const startTime = performance.now();
+        await fetch('https://www.google.com', { mode: 'no-cors' });
+        const endTime = performance.now();
+        const latency = Math.round(endTime - startTime);
+        const speed = latency < 200 ? "Fast" : latency < 500 ? "Medium" : "Slow";
+        statusElement.innerText = `Online (${speed}, ${latency}ms)`;
+        statusElement.className = "online";
+      } catch (e) {
+        statusElement.innerText = "Offline";
+        statusElement.className = "offline";
+      }
+    }
+
+    // Fetch data from API (UNCHANGED)
+    async function fetchData() {
+      if (state.isLoading) return;
+      state.isLoading = true;
+      elements.tableBody.innerHTML = '<tr><td>Loading...</td></tr>';
+
+      try {
+        updateColorScheme();
+        const timestamp = Date.now();
+        const url = `${config.apiUrl}?ts=${timestamp}`;
+        const response = await fetch(url, {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' },
+          cache: 'no-store'
+        });
+
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        const data = await response.json();
+        if (data.code === 0 && data.data) {
+          processResponse(data);
+          if (data.data.list && data.data.list.length > 0) {
+            syncCountdownWithServer(data.data.list[0].issueNumber);
+          }
+        } else {
+          throw new Error(data.msg || "API returned an error");
+        }
+      } catch (e) {
+        console.error("Fetch error:", e.message);
+        elements.tableBody.innerHTML = '<tr><td colspan="4">Error loading data</td></tr>';
+      } finally {
+        state.isLoading = false;
+      }
+    }
+
+    // Process API response (MODIFIED)
+    function processResponse(response) {
+      state.allResults = response.data.list || [];
+      state.totalPages = response.data.totalPage || 1;
+      state.lastUpdated = new Date();
+
+      let history = [];
+      if (state.allResults.length > 0) {
+        history = state.allResults.slice(0, 10).map(item => {
+          const num = parseInt(item.number);
+          return { period: item.issueNumber, number: num, resultType: getBigSmall(num), color: getColor(num), timestamp: Date.now() };
+        });
+        history.forEach(storeDailyPattern);
+      }
+
+      let period = "Unavailable";
+      if (state.allResults.length > 0) {
+        const latestPeriod = state.allResults[0].issueNumber || "0";
+        period = addOneToBigNumber(latestPeriod);
+      }
+
+      if (period !== "Unavailable" && period !== state.lastFetchedPeriod) {
+        cleanOldHistory();
+
+        if (state.predictionHistory.length > 0 && state.predictionHistory[0].resultStatus === "Pending") {
+          const match = history.find(h => h.period === state.predictionHistory[0].period);
+          if (match) {
+            const predictions = state.predictionHistory[0].predictions;
+            reverifier.updateAccuracy(match.number, predictions);
+            const { status, resultType } = updateLastStatus(match.number);
+            state.predictionHistory[0].resultType = resultType;
+            state.predictionHistory[0].resultStatus = status;
+            state.predictionHistory[0].number = match.number;
+            updateStats();
+          }
+        }
+
+        const predictionData = reverifier.generateFinalPrediction(period, state.allResults);
+        state.lastPrediction = predictionData.prediction;
+
+        elements.currentPeriod.innerText = `Current Period: ${period}`;
+        elements.predictionBox.innerText = `Prediction → ${state.lastPrediction}`;
+        elements.confidenceBox.innerText = `Confidence: ${Math.round(predictionData.confidence * 100)}%`;
+        elements.patternBox.innerText = predictionData.reasoning.join(' | ');
+        elements.levelBox.innerText = `Prediction Level: ${predictionData.level}`;
+
+        if (!state.predictionHistory.find(p => p.period === period)) {
+          state.predictionHistory.unshift({
+            period: period,
+            prediction: state.lastPrediction,
+            predictions: {
+              "Sum Logic": predictors[0].generatePrediction(period),
+              "Pattern Based": predictors[1].generatePrediction(state.allResults),
+              "Statistical": predictors[2].generatePrediction(state.allResults)
+            },
+            predictionData: predictionData,
+            resultType: "-",
+            resultStatus: "Pending",
+            number: null,
+            timestamp: Date.now()
+          });
+          saveStateToLocalStorage();
+        }
+
+        state.lastFetchedPeriod = period;
+      }
+
+      updateStats();
+      renderTable();
+    }
+
+    function renderTable() {
+      const head = elements.tableHead;
+      const body = elements.tableBody;
+
+      if (elements.predTab.classList.contains("active")) {
+        head.innerHTML = "<tr><th>Period</th><th>Prediction</th><th>Actual</th><th>Status</th><th>Level</th></tr>";
+        const filteredHistory = filterHistory(state.predictionHistory);
+        body.innerHTML = filteredHistory.length === 0
+          ? "<tr><td colspan='5'>No predictions match the filter</td></tr>"
+          : filteredHistory.map(item => `
+            <tr>
+              <td>${item.period}</td>
+              <td>${item.prediction}</td>
+              <td>${item.resultType}</td>
+              <td><span class="status ${item.resultStatus.toLowerCase()}">${item.resultStatus.charAt(0)}</span></td>
+              <td>${item.predictionData.level}</td>
+            </tr>`).join("");
+      } else {
+        head.innerHTML = "<tr><th>Period</th><th>Number</th><th>Big/Small</th><th>Color</th></tr>";
+        const filteredHistory = filterHistory(state.allResults.map(item => ({
+          period: item.issueNumber,
+          number: parseInt(item.number),
+          resultType: getBigSmall(parseInt(item.number)),
+          color: getColor(parseInt(item.number)),
+          timestamp: Date.now()
+        })));
+        body.innerHTML = filteredHistory.length === 0
+          ? "<tr><td colspan='4'>No game history matches the filter</td></tr>"
+          : filteredHistory.slice(0, 10).map(item => {
+              const colorClass = item.color.toLowerCase();
+              return `
+                <tr>
+                  <td>${item.period}</td>
+                  <td class="num ${colorClass}">${item.number}</td>
+                  <td>${item.resultType}</td>
+                  <td><span class="dot ${colorClass}"></span></td>
+                </tr>`;
+            }).join("");
+      }
+    }
+
+    elements.predTab.onclick = () => {
+      elements.predTab.classList.add("active");
+      elements.gameTab.classList.remove("active");
+      renderTable();
+    };
+    elements.gameTab.onclick = () => {
+      elements.gameTab.classList.add("active");
+      elements.predTab.classList.remove("active");
+      renderTable();
+    };
+
+    function init() {
+      loadStateFromLocalStorage();
+      updateColorScheme();
+      fetchData();
+      setInterval(fetchData, config.pollInterval);
+      setInterval(checkInternetSpeed, 5000);
+    }
+
+    document.addEventListener('DOMContentLoaded', init);
+  </script>
+
+</body></html>
